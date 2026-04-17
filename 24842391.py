@@ -26,6 +26,10 @@ def main(file_name, ra_name):
             ):
                 filtered.append([int(arr_list[i][6]), arr_list[i][18], arr_list[i][2]])
 
+    # Graceful handling: if no matching rows found, return defaults
+    if len(filtered) == 0:
+        return [], [], 0
+
     # Sort by MON_SUN ascending, then GlobalID ascending for ties
     filtered.sort()
     min_mon_sun_site = filtered[0][2]
@@ -52,8 +56,15 @@ def main(file_name, ra_name):
             sum_ra += float(arr_list[i][9])
             count_ra += 1
 
-    mean_all = sum_all / count_all
-    mean_ra = sum_ra / count_ra
+    if count_all == 0:
+        mean_all = 0
+    else:
+        mean_all = sum_all / count_all
+
+    if count_ra == 0:
+        mean_ra = 0
+    else:
+        mean_ra = sum_ra / count_ra
     mean_ra_sq = 0
     mean_all_sq = 0
 
@@ -64,8 +75,16 @@ def main(file_name, ra_name):
             # calculate standard deviation of specific areas PCT_HEAVY_MON_SUN
             mean_ra_sq += (float(arr_list[i][9]) - mean_ra) ** 2
  
-    std_dev_ra = round(((mean_ra_sq / (count_ra - 1)) ** (1 / 2)), 4)
-    std_dev_all = round(((mean_all_sq / (count_all - 1)) ** (1 / 2)), 4)
+    if count_ra <= 1:
+        std_dev_ra = 0
+    else:
+        std_dev_ra = round(((mean_ra_sq / (count_ra - 1)) ** (1 / 2)), 4)
+
+    if count_all <= 1:
+        std_dev_all = 0
+    else:
+        std_dev_all = round(((mean_all_sq / (count_all - 1)) ** (1 / 2)), 4)
+
     OP2 = [std_dev_ra, std_dev_all]
 
     # OP3
@@ -76,8 +95,12 @@ def main(file_name, ra_name):
             sum_mon_fri += float(arr_list[i][7])
             sum_sat_sun += float(arr_list[i][8])
 
-    mean_mon_fri = sum_mon_fri / (len(arr_list) - 1)
-    mean_sat_sun = sum_sat_sun / (len(arr_list) - 1)
+    if len(arr_list) <= 1:
+        mean_mon_fri = 0
+        mean_sat_sun = 0
+    else:
+        mean_mon_fri = sum_mon_fri / (len(arr_list) - 1)
+        mean_sat_sun = sum_sat_sun / (len(arr_list) - 1)
     mean_sq_mon_fri = 0
     mean_sq_sat_sun = 0
     sum_cor = 0
@@ -89,8 +112,11 @@ def main(file_name, ra_name):
             sum_cor += (float(arr_list[i][7]) - mean_mon_fri) * (
                 float(arr_list[i][8]) - mean_sat_sun
             )
-    correlation = sum_cor / (mean_sq_mon_fri * mean_sq_sat_sun) ** (1 / 2)
-    correlation = round(correlation, 4)
+    denominator = (mean_sq_mon_fri * mean_sq_sat_sun) ** (1 / 2)
+    if denominator == 0:
+        correlation = 0
+    else:
+        correlation = round(sum_cor / denominator, 4)
     OP3 = correlation
 
     return OP1, OP2, OP3
